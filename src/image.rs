@@ -138,7 +138,13 @@ impl PxImage {
     }
 
     pub(crate) fn trim_right(&mut self) {
-        while (0..self.height()).all(|row| self.image[self.width * (row + 1) - 1] == 0) {
+        if self.width == 0 || self.image.is_empty() {
+            return;
+        }
+
+        while self.width > 1
+            && (0..self.height()).all(|row| self.image[self.width * (row + 1) - 1] == 0)
+        {
             for row in (0..self.height()).rev() {
                 self.image.remove(row * self.width + self.width - 1);
             }

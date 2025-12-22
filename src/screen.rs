@@ -1,4 +1,8 @@
 //! Screen and rendering
+//!
+//! Data flow: gather render-world components by layer, draw into a CPU `PxImage`,
+//! then upload to a reusable `R8Uint` texture and present via a fullscreen quad.
+//! This is the single compositing path for sprites, text, tilemaps, rects, lines, and filters.
 
 // TODO Split out a module
 
@@ -77,7 +81,7 @@ impl<L: PxLayer> Plugin for Plug<L> {
 
         // R-A workaround
         #[cfg(feature = "headed")]
-        Assets::insert(
+        let _ = Assets::insert(
             &mut app
                 .add_systems(PostUpdate, resize_screen)
                 .world_mut()
@@ -389,10 +393,10 @@ impl PxRenderBuffer {
 
     fn clear(&self) {
         let mut inner = self.inner.write().unwrap();
-        if let Some(image) = inner.image.as_mut() {
-            if let Some(data) = image.data.as_mut() {
-                data.fill(0);
-            }
+        if let Some(image) = inner.image.as_mut()
+            && let Some(data) = image.data.as_mut()
+        {
+            data.fill(0);
         }
     }
 
@@ -460,6 +464,7 @@ impl<L: PxLayer> ViewNode for PxRenderNode<L> {
         target: &ViewTarget,
         world: &'w World,
     ) -> Result<(), NodeRunError> {
+        // Compose each layer into a CPU buffer, then blit to the GPU texture once per frame.
         let &camera = world.resource::<PxCamera>();
         let screen = world.resource::<Screen>();
 

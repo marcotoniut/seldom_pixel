@@ -59,14 +59,17 @@ pub(crate) fn plug<L: PxLayer>(app: &mut App) {
 
 // TODO Work on this naming
 
+/// Marks the root entity of a UI tree.
 #[derive(Component)]
 #[require(PxCanvas, DefaultLayer)]
 pub struct PxUiRoot;
 
+/// Sets a minimum size for a UI node.
 #[derive(Component, Deref, DerefMut, Default, Reflect)]
 #[cfg_attr(feature = "headed", require(Visibility))]
 pub struct PxMinSize(pub UVec2);
 
+/// Adds pixel margin around a UI node.
 #[derive(Component, Deref, DerefMut, Reflect)]
 #[cfg_attr(feature = "headed", require(Visibility))]
 pub struct PxMargin(pub u32);
@@ -77,34 +80,48 @@ impl Default for PxMargin {
     }
 }
 
+/// Per-child layout options for [`PxRow`].
 #[derive(Component, Default, Clone)]
 pub struct PxRowSlot {
+    /// If true, the slot expands to fill available space.
     pub stretch: bool,
 }
 
+/// Row/column layout container for UI children.
 #[derive(Component, Default, Clone, Reflect)]
 #[cfg_attr(feature = "headed", require(Visibility))]
 pub struct PxRow {
+    /// If true, lay out children vertically; otherwise horizontally.
     pub vertical: bool,
+    /// Space between children in pixels.
     pub space_between: u32,
 }
 
+/// Row sizing config used by [`PxGrid`].
 #[derive(Default, Clone, Reflect)]
 pub struct PxGridRow {
+    /// If true, the row expands to fill available space.
     pub stretch: bool,
 }
 
+/// Row/column definitions for [`PxGrid`].
 #[derive(Default, Clone, Reflect)]
 pub struct PxGridRows {
+    /// Row definitions.
     pub rows: Vec<PxGridRow>,
+    /// Space between rows/columns in pixels.
     pub space_between: u32,
 }
 
+/// Grid layout container for UI children.
 #[derive(Component, Clone)]
 #[cfg_attr(feature = "headed", require(Visibility))]
 pub struct PxGrid {
+    /// Number of columns in the grid.
     pub width: u32,
+    /// Row sizing rules.
     pub rows: PxGridRows,
+    /// Column sizing rules.
     pub columns: PxGridRows,
 }
 
@@ -118,15 +135,20 @@ impl Default for PxGrid {
     }
 }
 
+/// Stack layout container; children overlap in insertion order.
 #[derive(Component, Clone, Reflect)]
 #[cfg_attr(feature = "headed", require(Visibility))]
 pub struct PxStack;
 
+/// Scroll container that masks and offsets child content.
 #[derive(Component, Default, Clone, Copy, Reflect)]
 #[require(PxInvertMask, PxRect)]
 pub struct PxScroll {
+    /// If true, scroll horizontally; otherwise vertically.
     pub horizontal: bool,
+    /// Current scroll offset in pixels.
     pub scroll: u32,
+    /// Maximum scroll offset in pixels.
     pub max_scroll: u32,
 }
 
@@ -143,10 +165,12 @@ fn scroll(mut scrolls: Query<&mut PxScroll>, mut wheels: MessageReader<MouseWhee
     }
 }
 
+/// Field that captures a single key and renders its label.
 #[derive(Component, Reflect)]
 #[require(PxText)]
 #[reflect(from_reflect = false)]
 pub struct PxKeyField {
+    /// Placeholder/caret character when focused.
     pub caret: char,
     /// System that creates the text label
     ///
@@ -156,6 +180,7 @@ pub struct PxKeyField {
     /// changes.
     #[reflect(ignore)]
     pub key_to_str: SystemId<In<KeyCode>, String>,
+    /// Last displayed value when unfocused.
     pub cached_text: String,
 }
 
@@ -191,9 +216,12 @@ fn update_key_field_focus(
     *prev_focus = focus;
 }
 
+/// Emitted when a [`PxKeyField`] captures a key press.
 #[derive(EntityEvent)]
 pub struct PxKeyFieldUpdate {
+    /// Target field entity.
     pub entity: Entity,
+    /// Captured key.
     pub key: KeyCode,
 }
 
@@ -252,9 +280,12 @@ fn update_key_fields(
     focus.clear();
 }
 
+/// Caret blink state for text fields.
 #[derive(Reflect)]
 pub struct PxCaret {
+    /// Whether the caret is currently visible.
     pub state: bool,
+    /// Blink timer.
     pub timer: Timer,
 }
 
@@ -267,11 +298,15 @@ impl Default for PxCaret {
     }
 }
 
+/// Editable text field with an optional blinking caret.
 #[derive(Component, Reflect)]
 #[require(PxText)]
 pub struct PxTextField {
+    /// Cached text without the caret character.
     pub cached_text: String,
+    /// Character used as the caret.
     pub caret_char: char,
+    /// Active caret state if focused.
     pub caret: Option<PxCaret>,
 }
 
@@ -326,9 +361,12 @@ fn caret_blink(mut fields: Query<(&mut PxTextField, &mut PxText)>, time: Res<Tim
     }
 }
 
+/// Emitted when a [`PxTextField`] changes its text.
 #[derive(EntityEvent)]
 pub struct PxTextFieldUpdate {
+    /// Target field entity.
     pub entity: Entity,
+    /// Updated text content.
     pub text: String,
 }
 

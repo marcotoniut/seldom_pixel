@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  commands:
+    rustfmt-check:
+      run: cargo fmt --all -- --check
+    cargo-clippy:
+      run: cargo clippy
+
+pre-push:
+  commands:
+    tests:
+      run: cargo test --lib

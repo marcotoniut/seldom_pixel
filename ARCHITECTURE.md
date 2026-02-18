@@ -113,13 +113,13 @@ Non-goals for MVP:
 - Rotation / trimming / polygon meshes.
 - Mipmapping + linear filtered sampling (today textures are `mip_level_count: 1` and use `textureLoad`).
 
-Core asset types (new module suggested: `src/atlas.rs` or `src/sprite_atlas.rs`):
+Core asset types (in `src/atlas.rs`):
 
 - `PxSpriteAtlasAsset` (`Asset`):
   - `size: UVec2`
   - `data: PxImage` (entire atlas, palette indices)
   - `regions: Vec<AtlasRegion>`
-  - optional `names: HashMap<String, u32>` (authoring convenience)
+  - optional `names: HashMap<String, AtlasRegionId>` (authoring convenience)
 - `AtlasRegion`:
   - `frames: Vec<AtlasRect>` (MVP supports animated regions via multiple rects)
   - `frame_size: UVec2` (validated)
@@ -148,7 +148,8 @@ Padding / bleed:
 
 Milestone 1 — Atlas asset + loader (prebaked metadata)
 
-- Add `PxSpriteAtlasAsset` + `AssetLoader` for something like `*.px_atlas.ron` or `*.px_atlas.json`.
+- Status: started (asset types + `.px_atlas.ron` loader live in `src/atlas.rs`).
+- Current format: `.px_atlas.ron` with `image`, `regions`, and optional `names`.
 - Loader pattern:
   - load atlas PNG via `ImageLoader` (see `PxSpriteLoader::load` in `src/sprite.rs`)
   - load palette via `LoadContext::loader().immediate().load::<Palette>(...)` (see `src/sprite.rs`, `src/map.rs`)
@@ -194,7 +195,7 @@ Milestone 4 (optional) — Authoring + examples
 
 ## 9. Open architecture work (roadmap)
 
-- SpriteAtlas (prebaked-only) for the `gpu_palette` path: see sections 4–6.
+- SpriteAtlas (prebaked-only) for the `gpu_palette` path: see sections 4–6 (asset types + loader in progress).
 - GPU sprite batching improvements beyond atlasing:
   - reduce per-sprite draw calls via instancing and sorting by texture/bind group (`src/screen/gpu_sprite.rs`).
 - Clarify and document palette lifecycle constraints:

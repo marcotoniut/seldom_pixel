@@ -69,6 +69,7 @@ impl Default for PxEmitterFrequency {
 
 impl PxEmitterFrequency {
     /// Create a new [`PxEmitterFrequency`] with frequency bounds
+    #[must_use]
     pub fn new(min: Duration, max: Duration) -> Self {
         Self {
             min,
@@ -78,6 +79,7 @@ impl PxEmitterFrequency {
     }
 
     /// Create a [`PxEmitterFrequency`] with a certain frequency
+    #[must_use]
     pub fn single(duration: Duration) -> Self {
         Self {
             min: duration,
@@ -90,7 +92,7 @@ impl PxEmitterFrequency {
         if let Some(duration) = self.next {
             duration
         } else {
-            let duration = (self.max - self.min).mul_f32(rng.f32()) + self.min;
+            let duration = self.max.saturating_sub(self.min).mul_f32(rng.f32()) + self.min;
             self.next = Some(duration);
             duration
         }
@@ -176,6 +178,7 @@ impl From<Instant> for PxParticleStart {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Bundle, Default)]
 struct PxParticleBundle {
     position: PxSubPosition,
@@ -234,7 +237,11 @@ fn simulate_emitters<L: PxLayer>(
 
             // In wasm, the beginning of time is the start of the program, so we `checked_sub`
             let Some(new_time) = simulated_time.checked_sub(
-                (emitter.frequency.max - emitter.frequency.min).mul_f32(rng.f32())
+                emitter
+                    .frequency
+                    .max
+                    .saturating_sub(emitter.frequency.min)
+                    .mul_f32(rng.f32())
                     + emitter.frequency.min,
             ) else {
                 break;

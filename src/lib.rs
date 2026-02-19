@@ -7,7 +7,18 @@
 
 // TODO Remove `Px` prefix where possible
 
-#![allow(clippy::too_many_arguments, clippy::type_complexity)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+    clippy::too_many_arguments,
+    clippy::too_many_lines,
+    clippy::type_complexity,
+    clippy::items_after_test_module,
+    // Bevy system params (Res<T>, Query<T>, Extract<T>) are not valid as &Res<T> etc.
+    clippy::needless_pass_by_value,
+)]
 #![cfg_attr(not(feature = "headed"), allow(unused_imports))]
 #![warn(missing_docs)]
 

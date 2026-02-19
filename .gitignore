@@ -5,3 +5,4 @@ imported_assets/
 .DS_Store
 /rustc-ice-*.txt
 *.pending-snap
+.direnv/

@@ -40,6 +40,7 @@ mod particle;
 mod picking;
 pub mod position;
 pub mod prelude;
+mod profiling;
 mod rect;
 pub mod screen;
 pub mod set;

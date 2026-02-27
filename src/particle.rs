@@ -26,6 +26,8 @@ pub(crate) fn plug<L: PxLayer>(app: &mut App) {
         PostUpdate,
         (
             (
+                validate_emitters,
+                ApplyDeferred,
                 (simulate_emitters::<L>, insert_emitter_time),
                 (ApplyDeferred, update_emitters::<L>)
                     .chain()
@@ -35,6 +37,20 @@ pub(crate) fn plug<L: PxLayer>(app: &mut App) {
             despawn_particles,
         ),
     );
+}
+
+fn validate_emitters(
+    mut commands: Commands,
+    emitters: Query<(Entity, &PxEmitter), Or<(Added<PxEmitter>, Changed<PxEmitter>)>>,
+) {
+    for (entity, emitter) in &emitters {
+        if emitter.sprites.is_empty() {
+            error!(
+                "`PxEmitter` on entity {entity:?} has no sprites; removing invalid `PxEmitter` component"
+            );
+            commands.entity(entity).remove::<PxEmitter>();
+        }
+    }
 }
 
 /// A particle's lifetime
@@ -308,6 +324,76 @@ fn update_emitters<L: PxLayer>(
             *lifetime,
             Name::new("Particle"),
         )));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::prelude::px_layer;
+    use bevy_ecs::schedule::Schedule;
+
+    #[px_layer]
+    enum TestLayer {
+        #[default]
+        Test,
+    }
+
+    fn test_world() -> World {
+        let mut world = World::new();
+        // `PxEmitter` requires `DefaultLayer`; tests set layer explicitly.
+        world.insert_resource(crate::position::InsertDefaultLayer::noop());
+        world.init_resource::<Time<Real>>();
+        world.init_resource::<GlobalRng>();
+        world
+    }
+
+    fn run_emitter_step(world: &mut World) {
+        let mut schedule = Schedule::default();
+        schedule.add_systems(
+            (
+                validate_emitters,
+                ApplyDeferred,
+                simulate_emitters::<TestLayer>,
+                insert_emitter_time,
+                ApplyDeferred,
+                update_emitters::<TestLayer>,
+            )
+                .chain(),
+        );
+        schedule.run(world);
+    }
+
+    #[test]
+    fn invalid_emitter_with_empty_sprites_produces_no_particles() {
+        let mut world = test_world();
+
+        let emitter = world.spawn(PxEmitter::default()).id();
+        world.entity_mut(emitter).insert(TestLayer::default());
+
+        run_emitter_step(&mut world);
+
+        let particles = world.query::<&PxParticleStart>().iter(&world).count();
+        assert_eq!(particles, 0);
+    }
+
+    #[test]
+    fn valid_emitter_can_spawn_particles() {
+        let mut world = test_world();
+
+        let emitter = world.spawn(PxEmitter {
+            sprites: vec![default()],
+            frequency: PxEmitterFrequency::single(Duration::ZERO),
+            simulation: PxEmitterSimulation::None,
+            ..default()
+        });
+        emitter.id();
+        world.entity_mut(emitter.id()).insert(TestLayer::default());
+
+        run_emitter_step(&mut world);
+
+        let particles = world.query::<&PxParticleStart>().iter(&world).count();
+        assert!(particles >= 1);
     }
 }
 

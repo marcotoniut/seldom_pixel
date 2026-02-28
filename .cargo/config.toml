@@ -1,0 +1,6 @@
+[alias]
+check-quick = "check --lib"
+test-quick = "test --lib"
+verify-quick = "clippy --all-targets --features gpu_palette,brp_extras -- -D warnings"
+example-brp = "run --example brp_screenshot --features brp_extras"
+xtask = "run --manifest-path xtask/Cargo.toml --"

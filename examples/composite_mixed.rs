@@ -1,5 +1,5 @@
 #![allow(clippy::needless_pass_by_value)]
-// In this program, a composite sprite is rendered via the GPU palette path.
+// In this program, a composite sprite mixes a standalone sprite with an atlas-backed part.
 
 use bevy::prelude::*;
 use seldom_pixel::prelude::*;
@@ -24,15 +24,17 @@ fn main() {
 fn init(assets: Res<AssetServer>, mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    let base = assets.load("sprite/mage.px_sprite.png");
-    let overlay = assets.load("sprite/snow_2.px_sprite.png");
+    let body = assets.load("sprite/mage.px_sprite.png");
+    let atlas = assets.load("atlas/example.px_atlas.ron");
 
     let composite = PxCompositeSprite::new(vec![
-        PxCompositePart::new(base),
-        PxCompositePart::new(overlay).with_offset(IVec2::new(2, 6)),
+        PxCompositePart::new(body),
+        PxCompositePart::atlas_region(atlas, AtlasRegionId(0))
+            .with_offset(IVec2::new(4, 6))
+            .with_flip(true, false),
     ]);
 
-    commands.spawn((composite, PxGpuComposite, PxPosition(IVec2::splat(8))));
+    commands.spawn((composite, PxPosition(IVec2::splat(8))));
 }
 
 #[px_layer]

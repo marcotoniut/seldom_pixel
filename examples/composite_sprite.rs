@@ -27,18 +27,8 @@ fn init(assets: Res<AssetServer>, mut commands: Commands) {
     let base = assets.load("sprite/mage.px_sprite.png");
     let effect = assets.load("sprite/snow_1.px_sprite.png");
     let composite = PxCompositeSprite::new(vec![
-        PxCompositePart {
-            sprite: base,
-            offset: IVec2::ZERO,
-            frame: PxFrameBinding::default(),
-            filter: None,
-        },
-        PxCompositePart {
-            sprite: effect,
-            offset: IVec2::new(4, 6),
-            frame: PxFrameBinding::default(),
-            filter: None,
-        },
+        PxCompositePart::new(base),
+        PxCompositePart::new(effect).with_offset(IVec2::new(4, 6)),
     ]);
 
     commands.spawn((composite, PxPosition(IVec2::splat(8))));
